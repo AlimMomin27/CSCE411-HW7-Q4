@@ -3,6 +3,16 @@
 #include <vector>
 #include <unordered_map>
 #include <limits>
+#include <string>
+
+
+//implemented customer comparator for pair elements, keeping std::less for singular datatype examples
+template <typename T, typename V>
+struct custom_comp{
+    bool operator()( const std::pair<T,V>& A, const std::pair<T,V>& B ){
+        return A.second > B.second;
+    }
+};
 
 
 /*
@@ -95,6 +105,27 @@ class MPQ {
     }
 
     //UPDATE-KEY : made specifically for dijkstra, reason for custom MPQ and not using stl priority queue
+    // returns true, if the queue item is found and successfully updated
+    bool updateKey(T queue_item, int weight){
+        for(int i = 0; i < C.size(); i++)
+        {
+            if(C.at(i).first == queue_item.first)
+            {
+                C[i].second = weight;
+                //checking the children nodes because updating key will corrupt the MPQ structure
+                if(left_child(i) < C.size() && ((C.at(left_child(i)).second < weight) || (right_child(i) < C.size() && C.at(right_child(i)).second < weight  )))
+                {
+                    downheap(i);
+                }
+                //checks parents as well, if the key is less than the parent then upheap to correct position.
+                else if(weight < C.at(parent(i)).second)
+                {
+                    upheap(i);
+                }
+            }
+        }
+        return false;
+    }
 
     //TOP -- return the min/max value
     T top()
@@ -115,27 +146,22 @@ class MPQ {
     void print_PQ(){
         for(int i = 0; i < C.size(); i++)
         {
-            std::cout << " (" << C.at(i) << ") \n";
+            std::cout << " (" << C.at(i).first << ", " << C.at(i).second << ") \n";
         }
+        std::cout << std::endl;
     }
 
 };
 
 int main(){
-    MPQ<int, std::vector<int>, std::greater<int>> q;
-    q.push(10);
-    q.push(20);
-    q.push(1);
-    q.push(50);
+    MPQ<std::pair<std::string, int>, std::vector<std::pair<std::string,int>>, custom_comp<std::string, int>> q;
+    q.push(std::pair("A", 10));
+    q.push(std::pair("B", 20));
+    q.push(std::pair("C", 1));
+    q.push(std::pair("D", 50));
     q.print_PQ();
-    std::cout << q.top() << std::endl;
-    q.pop();
-    std::cout << q.top() << std::endl;
-    q.pop();
-    std::cout << q.top() << std::endl;
-    q.pop();
-    std::cout << q.top() << std::endl;
-    q.pop();
+    q.updateKey({"B", 0}, 2);
+    q.print_PQ();
 
     return 0;
 }
