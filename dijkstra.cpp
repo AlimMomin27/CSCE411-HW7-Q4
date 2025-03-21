@@ -104,7 +104,7 @@ class MPQ {
         downheap(0);
     }
 
-    //UPDATE-KEY : made specifically for dijkstra, reason for custom MPQ and not using stl priority queue
+    //UPDATE-KEY -- made specifically for dijkstra, reason for custom MPQ and not using stl priority queue
     // returns true, if the queue item is found and successfully updated
     bool updateKey(T queue_item, int weight){
         for(int i = 0; i < C.size(); i++)
@@ -122,6 +122,7 @@ class MPQ {
                 {
                     upheap(i);
                 }
+                return true;
             }
         }
         return false;
