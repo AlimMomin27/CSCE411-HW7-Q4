@@ -6,7 +6,7 @@
 #include <string>
 
 
-//implemented customer comparator for pair elements, keeping std::less for singular datatype examples
+//implemented customer comparator for pair elements, (keeping std::less in the MPQ template for singular datatype examples )
 template <typename T, typename V>
 struct custom_comp{
     bool operator()( const std::pair<T,V>& A, const std::pair<T,V>& B ){
@@ -37,7 +37,8 @@ class MPQ {
 
 
     //upheap -- internal function
-    void upheap(int index){
+    void upheap(int index)
+    {
         if(index == 0){ return; }
         int par = parent(index);
         if(comp(C.at(par), C.at(index))){
@@ -47,7 +48,8 @@ class MPQ {
     }
 
     //downheap -- internal function
-    void downheap(int index){
+    void downheap(int index)
+    {
         if(is_leaf(index)){ return; }
         int l_child = left_child(index);
         int r_child = right_child(index);
@@ -106,7 +108,8 @@ class MPQ {
 
     //UPDATE-KEY -- made specifically for dijkstra, reason for custom MPQ and not using stl priority queue
     // returns true, if the queue item is found and successfully updated
-    bool updateKey(T queue_item, int weight){
+    bool updateKey(T queue_item, int weight)
+    {
         for(int i = 0; i < C.size(); i++)
         {
             if(C.at(i).first == queue_item.first)
@@ -154,7 +157,62 @@ class MPQ {
 
 };
 
+//Dijkstra Class
+template<typename T>
+class Dijkstra {
+    //using 3 of the same data_type to have meaningful difference when specifying datatypes for structures.
+    using edge = std::pair<T, int>;
+    using queue_item = std::pair<T, int>;
+    using parent_and_weight = std::pair<T, int>;
+    // using a unordered_map for adj_list, contains a pair that has the node being pointed to and its edge weight
+    using adjacency_list = std::vector<edge>;
+
+    MPQ<queue_item, std::vector<queue_item>, custom_comp<T, int>> Q;
+    std::unordered_map<T, parent_and_weight> S; // tracks a node's parent includes the nodes total weight
+
+    public:
+    //G is a 1D vector, index represents the vertex ID and the elemnt (value in the vector) represents the starting weight (inf or 0)
+    std::unordered_map<T, parent_and_weight> dijkstra(std::vector<T> G, std::unordered_map<T, adjacency_list> adj_list, T source_node)
+    {
+        // int parent  = source_node;
+        //enqueue minPQ with source vertex with weight 0 and other vertexs weight inf weight
+        for(int i = 0; i < G.size(); i++)
+        {
+            if(G[i] == source_node)
+            {
+                Q.push(std::pair<T,int>(G[i], 0));
+            }
+            else
+            {
+                Q.push(std::pair<T,int>(G[i], INT_MAX));
+            }
+        }
+
+        while( !Q.empty() )
+        {
+            queue_item u = Q.top();
+            std::cout << " REMOVED " << u.first <<  "FROM Q\n";
+            Q.pop(); //remove item from top of the queue
+            
+
+            for( edge v : adj_list[u.first]){
+                //Call RELAX --> update Key for my implementation
+                bool updated = Q.updateKey(v, (u.second + v.second));
+                std::cout << "UPDATE: " << updated << " FOR " << v.first << std::endl;
+                if(updated){
+                    S[v.first] = parent_and_weight(u.first, {u.second + v.second});
+                }
+            }
+            Q.print_PQ();
+
+        }
+        return S;
+    }
+};
+
+
 int main(){
+    /* TESTING MPQ
     MPQ<std::pair<std::string, int>, std::vector<std::pair<std::string,int>>, custom_comp<std::string, int>> q;
     q.push(std::pair("A", 10));
     q.push(std::pair("B", 20));
@@ -163,6 +221,23 @@ int main(){
     q.print_PQ();
     q.updateKey({"B", 0}, 2);
     q.print_PQ();
+    */
+    //TESTING DIJKSTRA
+    Dijkstra<std::string> Djk;
+    std::vector<std::string> streets = {"University Drive", "Ross St", "Houston St", "George Bush Drive", "Wellborn St"};
+    std::unordered_map<std::string, std::vector<std::pair<std::string, int>>> adj;
+    adj["University Drive"] = {{"Houston St", 2}, {"Wellborn St", 5}};
+    adj["Houston St"] = {{"Ross St", 7}};
+    adj["Ross St"] = {};
+    adj["Wellborn St"] = {{"Ross St", 1}, {"George Bush Drive", 10}};
+    adj["George Bush Drive"] = {};
+
+    std::unordered_map<std::string, std::pair<std::string, int>> returned_set = Djk.dijkstra(streets, adj, "University Drive");
+
+    for(std::pair<std::string, std::pair<std::string, int>> pr : returned_set)
+    {
+        std::cout << "(" << pr.first << ", P[" << pr.second.first << "], " << pr.second.second << ")\n";
+    }
 
     return 0;
 }
