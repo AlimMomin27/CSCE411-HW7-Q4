@@ -5,6 +5,10 @@
 #include <limits>
 
 
+/*
+    Using custom MPQ because STL priority queue doesn't allow for changing keys
+*/
+
 template<typename T = std::pair<int,int>, class Container = std::vector<T>, class Compare = std::less<T>>
 class MPQ {
     private:
